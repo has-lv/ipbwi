@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_permissions extends ipbwi {
 		private $ipbwi			= null;
 		/**
@@ -233,6 +233,43 @@
 			}else{
 				return false;
 			}
+		}
+		
+		/**
+		 * @desc			Returns all groups of a member
+		 * @param	int		$member optional Member ID to find
+		 * @return	array	member groups splitted in primary and secondary
+		 * @author			Matthias Reuter
+		 * @sample
+		 * <code>
+		 * $ipbwi->group->listMemberGroups();
+		 * $ipbwi->group->listMemberGroups(7);
+		 * </code>
+		 * @since			2.0
+		 */
+		public function listMemberPermissionGroups($memberID = false) {
+			if(intval($memberID) > 0){
+				if(!($info = $this->ipbwi->member->info($memberID))){
+					return false;
+				}
+			}else{
+				$info = $this->ipbwi->member->myInfo;
+			}
+			
+			$memberGroups = $this->group->listMemberGroups($memberID);
+			$memberGroups = implode(',',array_merge(array($memberGroups['primary']),$memberGroups['secondary']));
+			// get member perm groups
+			$sql = 'SELECT g_perm_id FROM '.$this->ipbwi->board['sql_tbl_prefix'].'groups WHERE g_id IN ("'.$memberGroups.'")';
+			$this->ipbwi->ips_wrapper->DB->query($sql);
+			$permissiongroups = array();
+			while($row = $this->ipbwi->ips_wrapper->DB->fetch()){
+				$perms						= explode(',',$row['g_perm_id']);
+				foreach($perms as $perm){
+					$permissiongroups[$perm]		= $perm;
+				}
+			}
+
+			return $permissiongroups;
 		}
 	}
 ?>

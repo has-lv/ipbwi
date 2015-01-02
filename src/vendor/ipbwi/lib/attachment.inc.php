@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_attachment extends ipbwi {
 		private	$ipbwi			= null;
 		private	$memoryLimit	= false;

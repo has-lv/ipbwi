@@ -49,11 +49,24 @@
 			if($cache = $this->ipbwi->cache->get('galleryGetViewable', $this->ipbwi->member->myInfo['member_id'])){
 				return $cache;
 			}else{
-				$this->ipbwi->ips_wrapper->DB->query('SELECT * FROM '.$this->ipbwi->board['sql_tbl_prefix'].'gallery_albums');
+				// get member's permission groups
+				$memberPermissionGroups = $this->ipbwi->permissions->listMemberPermissionGroups();
+				
+				$this->ipbwi->ips_wrapper->DB->query('SELECT * FROM '.$this->ipbwi->board['sql_tbl_prefix'].'permission_index WHERE app="gallery" AND perm_type="categories"');
 				$cats = array();
 				while($row = $this->ipbwi->ips_wrapper->DB->fetch()){
-					if($this->ipbwi->group->isInGroup($row['perms_view'])){
-						$cats[$row['album_id']] = $row['album_id'];
+					if(
+					(
+						count(array_intersect(explode(',',$row['perm_view']), $memberPermissionGroups)) > 0
+						|| $row['perm_view'] == '*'
+					)
+					&&
+					(
+						$row['owner_only'] == 0
+						&& $row['friend_only'] == 0
+					)
+					){
+						$cats[$row['perm_type_id']] = $row['perm_type_id'];
 					}
 				}
 				$this->ipbwi->cache->save('galleryGetViewable', $this->ipbwi->member->myInfo['member_id'], $cats);
@@ -95,6 +108,7 @@
 
 				// get latest images
 				$sql = 'SELECT * FROM '.$this->ipbwi->board['sql_tbl_prefix'].'gallery_images WHERE image_approved="1"'.$catquery.$fromMember.' ORDER BY image_id DESC LIMIT '.intval($settings['start']).','.intval($settings['limit']);
+
 				$query = $this->ipbwi->ips_wrapper->DB->query($sql);
 				if($this->ipbwi->ips_wrapper->DB->getTotalRows($query) == 0){
 					return false;

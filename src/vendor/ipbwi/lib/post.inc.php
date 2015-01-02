@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_post extends ipbwi {
 		private $ipbwi			= null;
 		/**
@@ -144,7 +144,7 @@
 						
 						$this->ipbwi->ips_wrapper->DB->query('INSERT INTO '.$this->ipbwi->board['sql_tbl_prefix'].'mod_queued_items (type, type_id) VALUES ("post", "'.$postID.'")');
 					}
-					$this->ipbwi->cache->updateForum(intval($row['forum_id']),array('posts' => 1));
+					//$this->ipbwi->cache->updateForum(intval($row['forum_id']),array('posts' => 1));
 					
 					return $postID;
 				}else{

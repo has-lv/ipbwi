@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_bbcode extends ipbwi {
 		private $ipbwi			= null;
 		/**
@@ -150,9 +150,19 @@
 			var rtlIe		= '';
 			var rtlFull		= '';
 		//]]>
+
+		if(typeof jQuery !== "undefined" && typeof jQuery('#ipboard_body') !== "undefined") {
+			document.write('<div id="ipboard_body" style="display:none;"></div>');
+		}
+		if(typeof jQuery !== "undefined" && typeof jQuery('#add_poll') !== "undefined") {
+			document.write('<div id="add_poll"></div>');
+		}
+		
 	</script>
-	<script type='text/javascript' src='{$boardURL}public/min/index.php?ipbv=d8b02513a3323a31589df35f44739234&amp;g=js'></script>
-	<script type='text/javascript' src='{$boardURL}public/min/index.php?ipbv=d8b02513a3323a31589df35f44739234&amp;charset=UTF-8&amp;f=public/js/ipb.js,cache/lang_cache/1/ipb.lang.js,public/js/ips.hovercard.js,public/js/ips.quickpm.js,public/js/ips.post.js,public/js/ips.facebook.js,public/js/ips.poll.js,public/js/ips.attach.js,public/js/ips.textEditor.js,public/js/ips.textEditor.bbcode.js,public/js/ips.tags.js' charset='UTF-8'></script>
+EOF_SCRIPT;
+$jscript .= '<script type="text/javascript" src="'.$boardURL.'public/min/index.php?ipbv='.$this->ipbwi->ips_wrapper->registry->output->antiCacheHash.'&amp;g=js"></script>';
+$jscript .= '<script type="text/javascript" src="'.$boardURL.'public/min/index.php?ipbv='.$this->ipbwi->ips_wrapper->registry->output->antiCacheHash.'&amp;charset=UTF-8&amp;f=public/js/ipb.js,cache/lang_cache/1/ipb.lang.js,public/js/ips.hovercard.js,public/js/ips.quickpm.js,public/js/ips.post.js,public/js/ips.attach.js,public/js/ips.textEditor.js,public/js/ips.textEditor.bbcode.js" charset="UTF-8"></script>';
+$jscript .= <<<EOF_SCRIPT
 	<script type='text/javascript'>
 		//<![CDATA[
 		/* ---- URLs ---- */

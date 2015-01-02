@@ -199,9 +199,11 @@
 		 * @since			2.0
 		 */
 		public function isInGroup($group, $member = false, $extra = true) {
-			if (!is_array($group)) $group = explode(',', $group);
+			if (!is_array($group)){
+				$group = explode(',', $group);
+			}
 			settype($group, 'array');
-			if ($member) {
+			if($member){
 				$this->ipbwi->ips_wrapper->DB->query('SELECT member_group_id,mgroup_others FROM '.$this->ipbwi->board['sql_tbl_prefix'].'members WHERE member_id="'.$member.'"');
 				if($row = $this->ipbwi->ips_wrapper->DB->fetch()){
 					if(in_array($row['member_group_id'], $group)){
@@ -224,11 +226,12 @@
 					$other = explode(',',$this->ipbwi->member->myInfo['mgroup_others']);
 					if(is_array($other)) {
 						foreach($other as $v) {
-							if(in_array($v, $group)) {
+							if($v != '' && intval($v) > 0 && in_array($v, $group)) {
 								return true;
 							}
 						}
 					}
+
 					return false;
 				}
 			}
@@ -236,7 +239,6 @@
 		/**
 		 * @desc			Returns all groups of a member
 		 * @param	int		$member optional Member ID to find
-		 * @param	bool	$extra Include secondary groups to test against?
 		 * @return	array	member groups splitted in primary and secondary
 		 * @author			Matthias Reuter
 		 * @sample

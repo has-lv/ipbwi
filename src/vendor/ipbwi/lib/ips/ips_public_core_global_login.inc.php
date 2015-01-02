@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-
+	
 	require_once(ipbwi_BOARD_ADMIN_PATH.'applications/core/modules_public/global/login.php');
 	class ipbwi_ips_public_core_global_login extends \public_core_global_login {
 

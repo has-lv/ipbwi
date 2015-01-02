@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_skin extends ipbwi {
 		public $emoURL			= false;
 		private $ipbwi			= null;

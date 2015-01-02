@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-
+	
 	require_once(ipbwi_BOARD_ADMIN_PATH.'applications/core/modules_public/global/register.php' );
 	class ipbwi_ips_public_core_global_register extends \public_core_global_register {
 
@@ -45,7 +45,6 @@
 				$this->settings['bot_antispam']	= false;
 			}
 			$this->settings['registration_qanda']	= false;
-			$this->settings['base_url'] = $this->settings['base_url'].'/index.php?';
 			
 			$data	= $this->DB->buildAndFetch( array( 'select' => '*', 'from' => 'question_and_answer'));
 			//var_dump($data);

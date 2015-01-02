@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-
+	
 	define('IPB_THIS_SCRIPT', 'public');
 	define('IN_IPB', 1);
 	define('IPS_IS_SHELL', TRUE); // make offlinemode possible without crashing IPBWI
@@ -28,7 +28,9 @@
 	if(file_exists(ipbwi_BOARD_ADMIN_PATH.'api/api_core.php') === false){
 		define('IPBWI_INCORRECT_BOARD_PATH',true);
 	}else{
-		require_once(ipbwi_BOARD_ADMIN_PATH.'api/api_core.php');
+		if(!class_exists('apiCore')){
+			require_once(ipbwi_BOARD_ADMIN_PATH.'api/api_core.php');
+		}
 		
 		class ipbwi_ips_wrapper extends \apiCore{
 			public	$loggedIn;
@@ -48,11 +50,7 @@
 				if($_REQUEST['app'] == ''){ // IPB sometimes sets 'app' as REQUEST var. This line is a hotfix for that.
 					unset($_REQUEST['app']);
 				}
-				if(ipbwi_IN_IPB != true){
-					$this->loggedIn					= (bool) $this->memberData['member_id']; // status wether a member is logged in
-					$this->settings['base_url']		= $this->settings['board_url'];
-				}
-				
+				$this->loggedIn					= (bool) $this->memberData['member_id']; // status wether a member is logged in
 				
 				// be sure new dynamic cookie domain is set temporary
 				if(defined('ipbwi_COOKIE_DOMAIN') && ipbwi_COOKIE_DOMAIN != ''){
@@ -63,7 +61,9 @@
 				\ipsRegistry::cache()->updateCacheWithoutSaving( 'settings', \ipsRegistry::$settings);
 				
 				// get common functions
-				require_once(ipbwi_BOARD_ADMIN_PATH.'sources/base/ipsController.php');
+				if(!defined('IPBWI_IN_BOARD') || IPBWI_IN_BOARD != true){
+					require_once(ipbwi_BOARD_ADMIN_PATH.'sources/base/ipsController.php');
+				}
 				$this->command		= new \ipsCommand_default();
 
 				###### IPBWI4WP session obliviousness fix ######
@@ -100,24 +100,28 @@
 				$this->register = new ipbwi_ips_public_core_global_register();
 				$this->register->initRegister($this->registry);
 				
-				if(ipbwi_IN_IPB != true){
+				if(!defined('IPBWI_IN_BOARD') || IPBWI_IN_BOARD != true){
 					// deactivate redirect function
 					require_once(ipbwi_ROOT_PATH.'lib/ips/ips_output.inc.php');
 					$this->registry->output = new ipbwi_ips_output($this->registry, true);
 				}else{
-					/*require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/output/publicOutput.php' );
-					$this->registry->output = new output($this->registry, true);*/
+					// require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/output/publicOutput.php' );
+					// $this->registry->output = new output($this->registry, true);
 				}
 				
 				// get permission functions
-				require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/class_public_permissions.php');
+				if(!defined('IPBWI_IN_BOARD') || IPBWI_IN_BOARD != true){
+					require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/class_public_permissions.php');
+				}
 				$this->perm = new \classPublicPermissions($this->registry);
 				
 				// get editor/parser functions
 				require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/editor/composite.php');
 				$this->editor = new \classes_editor_composite();
 
-				require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/text/parser.php');
+				if(!defined('IPBWI_IN_BOARD') || IPBWI_IN_BOARD != true){
+					require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/text/parser.php');
+				}
 				$this->parser = new \classes_text_parser();
 				
 				// get messenger functions
@@ -131,7 +135,7 @@
 				// get reputation functions
 				require_once(ipbwi_BOARD_ADMIN_PATH.'sources/classes/class_reputation_cache.php');
 				$this->rep = new \classReputationCache($this->registry);
-				
+
 			}
 			
 			public function memberDelete($id, $check_admin=false){

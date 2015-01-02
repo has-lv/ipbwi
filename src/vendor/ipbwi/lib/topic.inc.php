@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_topic extends ipbwi {
 		private $ipbwi			= null;
 		/**
@@ -43,7 +43,7 @@
 		 * </code>
 		 * @since			2.0
 		 */
-		public function create($forumID,$title,$post,$desc=false,$useEmo=true,$useSig=true,$bypassPerms=false,$guestName=false,$authorID=false, $htmlState = false, $time = false){
+		public function create($forumID,$title,$post,$desc=false,$useEmo=true,$useSig=true,$bypassPerms=false,$guestName=false,$authorID=false, $htmlState = false, $time = false, $parseBBCode=true, $parse_nl2br=false){
 			if($time === false){
 				$time = time();
 			}
@@ -91,25 +91,27 @@
 						$preview = 0;
 					}
 
-					$title	= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($title));
-					$postName	= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($postName));
+					$title			= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($title));
+					$postName		= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($postName));
+					$title_seo		= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe(IPSText::makeSeoTitle($title)));
 					// Insert Topic
-					$topicQuery = $this->ipbwi->ips_wrapper->DB->query('INSERT INTO '.$this->ipbwi->board['sql_tbl_prefix'].'topics (title, state, posts, starter_id, start_date, last_poster_id, last_post, starter_name, last_poster_name, views, forum_id, approved, author_mode, pinned) VALUES ("'.$title.'", "open", "0", "'.$postAuthorID.'", "'.$time.'", "'.$postAuthorID.'", "'.$time.'", "'.$postName.'", "'.$postName.'", "0", "'.$forumID.'", "'.($preview ? '0' : '1').'", "1", "0")');
+					$topicQuery = $this->ipbwi->ips_wrapper->DB->query('INSERT INTO '.$this->ipbwi->board['sql_tbl_prefix'].'topics (title, title_seo, state, posts, starter_id, start_date, last_poster_id, last_post, starter_name, last_poster_name, views, forum_id, approved, author_mode, pinned) VALUES ("'.$title.'", "'.$title_seo.'", "open", "0", "'.$postAuthorID.'", "'.$time.'", "'.$postAuthorID.'", "'.$time.'", "'.$postName.'", "'.$postName.'", "0", "'.$forumID.'", "'.($preview ? '0' : '1').'", "1", "0")');
 					$topicID = $this->ipbwi->ips_wrapper->DB->getInsertId($topicQuery);
 					
 					$this->ipbwi->ips_wrapper->parser->set(array(
 					'skipBadWords' => false,
-					'parseBBCode' => (isset($row['use_ibc']) ? $row['use_ibc'] : 0),
-					'parseHtml' => (isset($row['use_html']) ? $row['use_html'] : 0),
+					'parseBBCode' => ((isset($row['use_ibc']) && $parseBBCode) ? $row['use_ibc'] : 0),
+					'parse_nl2br' => $parse_nl2br,
+					'parseHtml' => ((isset($row['use_html']) && $htmlState) ? 1 : 0),
 					'parseEmoticons' => $row['use_emo'],
 					'parseArea' => 'posts'
 					));
 
 					//$post = $this->ipbwi->ips_wrapper->editor->process($post);
-
+/*
 					if($row['use_ibc'] == 1){
 						$post	= $this->ipbwi->bbcode->html2bbcode($post);
-					}
+					}*/
 					// insert post
 					$post	= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($post));
 					$postName	= $this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe($postName));
@@ -132,7 +134,7 @@
 						}
 					}
 					// And stats
-					$this->ipbwi->cache->updateForum(intval($forumID),array('topics' => 1));
+					//$this->ipbwi->cache->updateForum(intval($forumID),array('topics' => 1));
 					return $topicID;
 				}else{
 					$this->ipbwi->addSystemMessage('Error',$this->ipbwi->getLibLang('noPerms'),'Located in file <strong>'.__FILE__.'</strong> at class <strong>'.__CLASS__.'</strong> in function <strong>'.__FUNCTION__.'</strong> on line #<strong>'.__LINE__.'</strong>');

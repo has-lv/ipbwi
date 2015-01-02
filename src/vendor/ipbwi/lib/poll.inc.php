@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_poll extends ipbwi {
 		private $ipbwi			= null;
 		/**

@@ -9,11 +9,11 @@
 	 * @since			2.0
 	 * @license			http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
 	 */
-
-    namespace IPBWI;
+	
+	namespace IPBWI;
 
 	class ipbwi {
-		const 				VERSION			= '3.5.4';
+		const 				VERSION			= '3.6.2';
 		const 				TITLE			= 'IPBWI';
 		const 				PROJECT_LEADER	= 'Matthias Reuter';
 		const 				DEV_TEAM		= 'Matthias Reuter';
@@ -46,7 +46,6 @@
 				}
 			}
 		}
-
         /**
          * @desc			Load's requested libraries dynamicly
          * @param	        string	$name library-name
@@ -58,7 +57,16 @@
         public function __call($name, $arguments){
             return $this->{$name};
         }
-
+        /**
+         * @desc			Returns IPBWI instance
+         * @return			IPBWI\ipbwi
+         * @author			Jānis Burvis
+         * @since			3.6.2
+         * @ignore
+         */
+        public function instance(){
+            return $this;
+        }
 		/**
 		 * @desc			Loads and checks different vars when class is initiating
 		 * @author			Matthias Reuter
@@ -93,7 +101,11 @@
 				$this->board					= $this->ips_wrapper->settings;
 				$this->board['version']			= $this->ips_wrapper->caches['app_cache']['core']['app_version'];
 				$this->board['version_long']	= $this->ips_wrapper->caches['app_cache']['core']['app_long_version'];
-				$this->board['url']				= str_replace('?','',$this->ips_wrapper->settings['board_url']).'/';
+				$url							= preg_replace('/s=[^&]+&amp;/',"",str_replace('index.php?','',$this->ips_wrapper->settings['board_url']));
+				if(substr($url,-1,1) != '/'){
+					$url = $url.'/';
+				}
+				$this->board['url']				= $url;
 				$this->board['name']			= $this->ips_wrapper->settings['board_name'];
 				$this->board['basedir']			= ipbwi_BOARD_PATH;
 				$this->board['upload_dir']		= $this->ips_wrapper->settings['upload_dir'].'/';
@@ -161,7 +173,7 @@
 					return 'The requested libLang <strong>'.$var.'</strong> is not defined.';
 				}
 			}else{
-				return self::$libLang;
+				return self::libLang;
 			}
 		}
 		/**

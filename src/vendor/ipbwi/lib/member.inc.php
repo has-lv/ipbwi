@@ -157,7 +157,6 @@
 			// No Member ID specified? Go for the current users UID.
 			$member = $this->info($userID);
 			$avatar = \IPSMember::buildAvatar($member);
-			#$avatar = str_replace('http://www.gravatar.com/avatar/f4b24f6f1dad5d1dfb39dcb281897203?d=http%3A%2F%2Froot.pc-intern.com%2Fdevelopment%2Fprojects.pc-intern.com%2Fpublic%2Fstyle_avatars%2Fblank_avatar.gif','http://root.pc-intern.com/development/projects.pc-intern.com/public/style_images/master/profile/default_thumb.png',$avatar);
 			return $avatar;
 		}
 		/**
@@ -172,16 +171,19 @@
 		 * </code>
 		 * @since			2.0
 		 */
-		public function photo($userID = false, $thumb = false){
+		public function photo($userID = false, $thumb = false, $hideDefault = false){
 			$member	= $this->info($userID);
 			$photo	= \IPSMember::buildProfilePhoto($member);
-			if($photo['pp_main_photo']){
-				if($thumb === true && $photo['pp_thumb_photo']){
-					$photo = '<a href="'.$photo['pp_main_photo'].'"><img src="'.$photo['pp_thumb_photo'].'" width="'.$photo['pp_thumb_width'].'" height="'.$photo['pp_thumb_height'].'" alt="'.$this->id2displayname($userID).'" /></a>';
+
+			if($hideDefault == false || ($hideDefault == true && (strpos($photo['pp_thumb_photo'],'default_large.png') === false && $photo['pp_thumb_photo'] != ''))){
+				if($thumb === true && $photo['pp_thumb_photo'] != ''){
+					$photohtml = '<img src="'.$photo['pp_thumb_photo'].'" width="'.$photo['pp_thumb_width'].'" height="'.$photo['pp_thumb_height'].'" alt="'.$this->id2displayname($userID).'" />';
+				}elseif($photo['pp_main_photo'] != ''){
+					$photohtml = '<img src="'.$photo['pp_main_photo'].'" width="'.$photo['pp_main_width'].'" height="'.$photo['pp_main_height'].'" alt="'.$this->id2displayname($userID).'" />';
 				}else{
-					$photo = '<img src="'.$photo['pp_main_photo'].'" width="'.$photo['pp_main_width'].'" height="'.$photo['pp_main_height'].'" alt="'.$this->id2displayname($userID).'" />';
+					return false;
 				}
-				return $photo;
+				return $photohtml;
 			}else{
 				return false;
 			}
@@ -245,6 +247,38 @@
 				$sql = $this->ipbwi->ips_wrapper->DB->query('SELECT name FROM '.$this->ipbwi->board['sql_tbl_prefix'].'members WHERE member_id="'.$this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe(trim($userIDs))).'"');
 				if($row = $this->ipbwi->ips_wrapper->DB->fetch($sql)){
 					return $row['name'];
+				}else{
+					return false;
+				}
+			}
+		}
+		/**
+		 * @desc			Gets the Member Name associated with a Member ID.
+		 * @param	mixed	$userIDs Member Ids. If you pass an array with IDs, the function also returns an array with each ID beeing the key and the member name as its value. If a member ID could not be found, the value will be set to false.
+		 * @return	mixed	Single member name, assoc. array with name/id pairs, or false if the ID(s) could not be found
+		 * @author			Matthias Reuter
+		 * @sample
+		 * <code>
+		 * $ipbwi->member->id2name(55);
+		 * $ipbwi->member->id2name(array(55,22,77));
+		 * </code>
+		 * @since			2.0
+		 */
+		public function id2seoname($userIDs){
+			if(is_array($userIDs)){
+				foreach($userIDs as $i => $j){
+					$sql = $this->ipbwi->ips_wrapper->DB->query('SELECT members_seo_name FROM '.$this->ipbwi->board['sql_tbl_prefix'].'members WHERE member_id="'.$this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe(trim($userIDs))).'"');
+					if($row = $this->ipbwi->ips_wrapper->DB->fetch($sql)){
+						$names[$i] = $row['members_seo_name'];
+					}else{
+						$names[$i] = false;
+					}
+				}
+				return $ids;
+			}else{
+				$sql = $this->ipbwi->ips_wrapper->DB->query('SELECT members_seo_name FROM '.$this->ipbwi->board['sql_tbl_prefix'].'members WHERE member_id="'.$this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe(trim($userIDs))).'"');
+				if($row = $this->ipbwi->ips_wrapper->DB->fetch($sql)){
+					return $row['members_seo_name'];
 				}else{
 					return false;
 				}
@@ -1148,10 +1182,10 @@
 		 */
 		public function listOnlineMembers($detailed = false, $formatted = false, $show_anon = false, $order_by = 'running_time', $order = 'DESC', $separator = ', '){
 			// Grab the cut-off length in minutes from the board settings
-			$cutoff = $this->ipbwi->getBoardVar('au_cutoff') ? $this->ipbwi->getBoardVar('au_cutoff') : '15';
+			$cutoff = intval($this->ipbwi->getBoardVar('au_cutoff') ? $this->ipbwi->getBoardVar('au_cutoff') : '15');
 			// Create a timestamp for the current time, and subtract the cut-off length to get a timestamp in the past
 			$timecutoff = time()-($cutoff * 60);
-			if($formatted){
+			if($formatted !== false){
 				// the $formatted param is true, so let's return an HTML list of display name links, separated by $separator
 				// if this function has already been run and has saved a cache, return the cached value from database for speed
 				if($online = $this->ipbwi->cache->get('listOnlineMembers', 'formatted') && isset($online) && is_array($online) && count($online) > 0){
@@ -1160,8 +1194,14 @@
 						// Grab advanced info for the member so we have the display name, prefix and suffix
 						$member = $this->info($value);
 						// Create the html-formatted string
-						$link = '<a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/">'.$member['prefix'].$member['members_display_name'].$member['suffix'].'</a>';
-						$online[$key] = $link;
+						if($this->photo($value,true, true) != ''){
+							if($formatted == 'avatars'){
+								$link = '<div class="ipbwi-online-user"><a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/" title="'.$member['members_display_name'].'">'.$this->photo($value,true, true).'</a></div>';
+							}else{
+								$link = '<a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/">'.$member['prefix'].$member['members_display_name'].$member['suffix'].'</a>';
+							}
+							$online[$key] = $link;
+						}
 					}
 					// Now we have an array full of html links... But that isn't very helpful to a PHP newbie. Lets just return an html string. Implode the array with $separator
 					$online = implode($separator,$online);
@@ -1189,9 +1229,17 @@
 						// Grab advanced info for the member so we have the display name, prefix and suffix
 						$member = $this->info($value);
 						// Create the html-formatted string
-						$link = '<a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/">'.$member['prefix'].$member['members_display_name'].$member['suffix'].'</a>';
-						$online[$key] = $link;
+						if($this->photo($value,true, true) != ''){
+							if($formatted == 'avatars'){
+								$link = '<div class="ipbwi-online-user"><a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/" title="'.$member['members_display_name'].'">'.$this->photo($value,true, true).'</a></div>';
+							}else{
+								$link = '<a href="'.$this->ipbwi->getBoardVar('url').'user/'.$value.'-'.$member['members_seo_name'].'/">'.$member['prefix'].$member['members_display_name'].$member['suffix'].'</a>';
+							}
+							
+							$onlinenew[$key] = $link;
+						};
 					}
+					$online = $onlinenew;
 					// Now we have an array full of html links... But that isn't very helpful to a PHP newbie. Lets just return an html string. Implode the array with $separator
 					$online = implode($separator,$online);
 					// Finally, return the array
@@ -1201,7 +1249,7 @@
 				}
 			}
 			// if the $detailed param is true, return extra info :)
-			if($detailed){
+			/*if($detailed){
 				// if this function has already been run and has saved a cache, return the cached value from database for speed
 				if($online = $this->ipbwi->cache->get('listOnlineMembers', 'nodetail') && isset($online) && is_array($online) && count($online) > 0){
 					// For each key in the $online array we just read from the database, set the value to the result of get_advinfo(value)
@@ -1256,7 +1304,7 @@
 			// We didn't do all that just to have to do it again next time. Cache the result to the database for speed next time.
 			$this->ipbwi->cache->save('listOnlineMembers', 'simple', $online);
 			// Finally, return the array
-			return $online;
+			return $online;*/
 		}
 		/**
 		 * @desc			Get an array of random members.

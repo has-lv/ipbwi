@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-
+    
 	class ipbwi_stats extends ipbwi {
 		private $ipbwi			= null;
 		/**
