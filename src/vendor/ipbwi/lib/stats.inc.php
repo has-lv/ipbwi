@@ -9,7 +9,7 @@
 	 */
 
     namespace IPBWI;
-    
+
 	class ipbwi_stats extends ipbwi {
 		private $ipbwi			= null;
 		/**
@@ -54,15 +54,22 @@
 		 * </code>
 		 * @since			2.01
 		 */
-		 function activeCount() {
-			if($cache = $this->ipbwi->cache->get('activeCount', '1')){
+		 function activeCount($location=false) {
+			if(!$location && $cache = $this->ipbwi->cache->get('activeCount', '1')){
 				return $cache;
 			}else{
+				// location filter
+				if(is_array($location)){
+					$sql_location = ' AND '.$location['type_name'].'="'.$location['type_value'].'" AND '.$location['id_name'].'="'.$location['id_value'].'"';
+				}else{
+					$sql_location = '';
+				}
+			
 				// Init
 				$count = array('total' => '0', 'anon' => '0', 'guests' => '0', 'members' => '0');
 				$cutoff = $this->ipbwi->getBoardVar('au_cutoff') ? $this->ipbwi->getBoardVar('au_cutoff') : '15';
 				$timecutoff = time() - ($cutoff * 60);
-				$this->ipbwi->ips_wrapper->DB->query('SELECT member_id, login_type FROM '.$this->ipbwi->board['sql_tbl_prefix'].'sessions WHERE running_time > "'.$timecutoff.'"');
+				$this->ipbwi->ips_wrapper->DB->query('SELECT member_id, login_type FROM '.$this->ipbwi->board['sql_tbl_prefix'].'sessions WHERE running_time > "'.$timecutoff.'"'.$sql_location);
 				// Let's cache so we don't screw ourselves over :)
 				$cached = array();
 				// We need to make sure our man's in this count...

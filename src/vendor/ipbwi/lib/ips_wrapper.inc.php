@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-	
+
 	define('IPB_THIS_SCRIPT', 'public');
 	define('IN_IPB', 1);
 	define('IPS_IS_SHELL', TRUE); // make offlinemode possible without crashing IPBWI
@@ -56,7 +56,7 @@
 				if(defined('ipbwi_COOKIE_DOMAIN') && ipbwi_COOKIE_DOMAIN != ''){
 					$this->board['cookie_domain']						= ipbwi_COOKIE_DOMAIN;
 					$this->ips_wrapper->settings['cookie_domain']		= ipbwi_COOKIE_DOMAIN;
-					\ipsRegistry::$settings['cookie_domain']				= ipbwi_COOKIE_DOMAIN;
+					\ipsRegistry::$settings['cookie_domain']			= ipbwi_COOKIE_DOMAIN;
 				}
 				\ipsRegistry::cache()->updateCacheWithoutSaving( 'settings', \ipsRegistry::$settings);
 				
@@ -70,7 +70,7 @@
 				###### prevent cleanup of active sessions ######
 				#retrieve member id
 				if(isset($_POST['log']) && $_POST['log'] != '' && file_exists(ipbwi_BOARD_ADMIN_PATH.'sources/classes/session/publicSessions.php')){
-					$sql = $this->DB->query('SELECT member_id FROM '.$this->settings['sql_tbl_prefix'].'members WHERE LOWER(name)="'.strtolower(trim($_POST['log'])).'"');
+					$sql = $this->DB->query('SELECT member_id FROM '.$this->settings['sql_tbl_prefix'].'members WHERE LOWER(name)="'.$this->DB->addSlashes(strtolower(trim($_POST['log']))).'"');
 					if($row = $this->DB->fetch($sql)){
 						#retrieve active sessions
 						$query = 'SELECT * FROM '.$this->settings['sql_tbl_prefix'].'sessions WHERE member_id = "'.$row['member_id'].'"';
@@ -148,7 +148,7 @@
 				// delete member
 				$return = @\IPSMember::remove($id, $check_admin); // @ todo: check notices from ip.board
 				
-				return $return === null ? true : false;
+				return $return;
 			}
 			// return data of current member
 			public function myInfo(){

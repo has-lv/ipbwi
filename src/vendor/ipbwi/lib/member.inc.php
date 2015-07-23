@@ -818,12 +818,19 @@
 					$this->ipbwi->addSystemMessage('Error',$this->ipbwi->getLibLang('membersOnly'),'Located in file <strong>'.__FILE__.'</strong> at class <strong>'.__CLASS__.'</strong> in function <strong>'.__FUNCTION__.'</strong> on line #<strong>'.__LINE__.'</strong>');
 					return false;
 				}elseif(!$memberID){
-					$member['member_id'] = $this->ipbwi->myInfo['member_id'];
+					$member['member_id'] = $this->ipbwi->member->myInfo['member_id'];
 				}else{
 					$member['member_id'] = $memberID;
 				}
 				
-				return $this->ipbwi->ips_wrapper->photo->save($member,'custom');
+				try{
+					$result				= $this->ipbwi->ips_wrapper->photo->save($member,'custom');
+				}
+				catch(Exception $e){
+					$result				= $e->getMessage();
+				}
+				
+				return $result;
 			}else{
 				return false;
 			}
@@ -1026,30 +1033,42 @@
 			$login_method = $this->ipbwi->ips_wrapper->cache->getCache('login_methods');
 			
 			// login via username
-			if($login_method[1]['login_user_id'] == 'username' && $this->name2id($user)){
-				$_POST['ips_username'] = $user;
-				$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
-				$userID = $this->name2id($user);
-			// or via email
-			}elseif($login_method[1]['login_user_id'] == 'email' && $this->email2id($user)){
-				$_POST['ips_username'] = $user;
-				$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
-				$userID = $this->email2id($user);
-			// or both possible
-			}elseif($login_method[1]['login_user_id'] == 'either' && ($this->email2id($user) || $this->name2id($user))){
-				if($this->email2id($user)){
-					$email = true;
-					$_POST['ips_username'] = $user;
-					$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
-					$userID = $this->email2id($user);
-				}else{
-					$_POST['ips_username'] = $user;
-					$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
-					$userID = $this->name2id($user);
+			$internal_found = false;
+			foreach($login_method as $findinternal){
+				if($findinternal['login_folder_name'] == 'internal'){
+					$internal_found = true;
+					if($findinternal['login_user_id'] == 'username' && $this->name2id($user)){
+						$_POST['ips_username'] = $user;
+						$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
+						$userID = $this->name2id($user);
+					// or via email
+					}elseif($findinternal['login_user_id'] == 'email' && $this->email2id($user)){
+						$_POST['ips_username'] = $user;
+						$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
+						$userID = $this->email2id($user);
+					// or both possible
+					}elseif($findinternal['login_user_id'] == 'either' && ($this->email2id($user) || $this->name2id($user))){
+						if($this->email2id($user)){
+							$email = true;
+							$_POST['ips_username'] = $user;
+							$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
+							$userID = $this->email2id($user);
+						}else{
+							$_POST['ips_username'] = $user;
+							$this->ipbwi->ips_wrapper->request['ips_username'] = $user;
+							$userID = $this->name2id($user);
+						}
+					}else{
+						$this->ipbwi->addSystemMessage('Error', 'Login failed - member not found', 'Located in file <strong>'.__FILE__.'</strong> at class <strong>'.__CLASS__.'</strong> in function <strong>'.__FUNCTION__.'</strong> on line #<strong>'.__LINE__.'</strong>');
+						return false;
+					}
 				}
-			}else{
+			}
+			if($internal_found == false){
+				$this->ipbwi->addSystemMessage('Error', 'Login failed - no internal login method found.', 'Located in file <strong>'.__FILE__.'</strong> at class <strong>'.__CLASS__.'</strong> in function <strong>'.__FUNCTION__.'</strong> on line #<strong>'.__LINE__.'</strong>');
 				return false;
 			}
+			
 			if($cookie) {
 				$this->ipbwi->ips_wrapper->request['rememberMe'] = 1;
 			}
@@ -1057,10 +1076,12 @@
 				$_POST['ips_password'] = $pw;
 				$this->ipbwi->ips_wrapper->request['ips_password'] = \IPSText::parseCleanValue( urldecode($pw));
 			}
+
 			$status = $this->ipbwi->ips_wrapper->login->doLogin();
 			if(isset($status[2])){
 				$this->loggedIn = false;
 				$this->ipbwi->addSystemMessage('Error', $status[2], 'Located in file <strong>'.__FILE__.'</strong> at class <strong>'.__CLASS__.'</strong> in function <strong>'.__FUNCTION__.'</strong> on line #<strong>'.__LINE__.'</strong>');
+				return false;
 			}elseif($status[0] != ''){
 				$this->loggedIn = true;
 				$info = \IPSMember::load($userID);
@@ -1085,7 +1106,7 @@
 		 * @since			2.0
 		 */
 		public function logout(){
-			$status = @$this->ipbwi->ips_wrapper->login->doLogout(false); // @ todo: check notices from ip.board
+			$status = $this->ipbwi->ips_wrapper->login->doLogout(false); // @ todo: check notices from ip.board
 			if(is_array($status) && count($status) > 0){
 				$this->loggedIn = false;
 				return true;

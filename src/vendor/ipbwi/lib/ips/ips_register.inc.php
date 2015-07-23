@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-	
+
 	require_once(ipbwi_BOARD_ADMIN_PATH.'applications/core/modules_public/global/register.php' );
 	class ipbwi_ips_public_core_global_register extends \public_core_global_register {
 
@@ -33,6 +33,10 @@
 			
 			$this->settings['bot_antispam_type']	= 'none';
 			$this->settings['bot_antispam']			= false;
+		}
+		
+		protected function _resetMember(){
+			
 		}
 		
 		// set request for registration

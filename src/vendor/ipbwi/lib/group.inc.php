@@ -87,6 +87,24 @@
 			}
 		}
 		/**
+		 * @desc			Returns ID of a group name
+		 * @return	int		Group ID
+		 * @author			Matthias Reuter
+		 * @sample
+		 * <code>
+		 * $ipbwi->group->name2id('Test Group');
+		 * </code>
+		 * @since			3.6.6
+		 */
+		public function name2id($name){
+			$sql = $this->ipbwi->ips_wrapper->DB->query('SELECT g_id FROM '.$this->ipbwi->board['sql_tbl_prefix'].'groups WHERE LOWER(g_title)="'.$this->ipbwi->ips_wrapper->DB->addSlashes($this->ipbwi->makeSafe(strtolower(trim($name)))).'"');
+			if($row = $this->ipbwi->ips_wrapper->DB->fetch($sql)){
+				return $row['g_id'];
+			}else{
+				return false;
+			}
+		}
+		/**
 		 * @desc			Creates a new usergroup
 		 * @param	string	$title Title of the new usergroup
 		 * @param	int		$perm_id Permission ID

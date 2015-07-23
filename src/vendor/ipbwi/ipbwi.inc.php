@@ -4,16 +4,16 @@
 	 * 					php-scripts and load the ipbwi-class to use the functions.
 	 * @author			Matthias Reuter
 	 * @package			IPBWI
-	 * @copyright		2007-2014 Matthias Reuter
+	 * @copyright		2007-2015 Matthias Reuter
 	 * @link			http://ipbwi.com
 	 * @since			2.0
 	 * @license			http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License
 	 */
-	
+
 	namespace IPBWI;
 
 	class ipbwi {
-		const 				VERSION			= '3.6.2';
+		const 				VERSION			= '3.6.6';
 		const 				TITLE			= 'IPBWI';
 		const 				PROJECT_LEADER	= 'Matthias Reuter';
 		const 				DEV_TEAM		= 'Matthias Reuter';
@@ -59,7 +59,7 @@
         }
         /**
          * @desc			Returns IPBWI instance
-         * @return			IPBWI\ipbwi
+         * @return			\IPBWI\ipbwi
          * @author			Jānis Burvis
          * @since			3.6.2
          * @ignore
@@ -93,7 +93,7 @@
 				if(defined('ipbwi_COOKIE_DOMAIN') && ipbwi_COOKIE_DOMAIN != ''){
 					$this->board['cookie_domain']						= ipbwi_COOKIE_DOMAIN;
 					$this->ips_wrapper->settings['cookie_domain']		= ipbwi_COOKIE_DOMAIN;
-					\ipsRegistry::$settings['cookie_domain']				= ipbwi_COOKIE_DOMAIN;
+					\ipsRegistry::$settings['cookie_domain']			= ipbwi_COOKIE_DOMAIN;
 				}
 				\ipsRegistry::cache()->updateCacheWithoutSaving( 'settings', \ipsRegistry::$settings );
 				

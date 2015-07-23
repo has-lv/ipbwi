@@ -10,7 +10,7 @@
 	 */
 
     namespace IPBWI;
-	
+
 	require_once(ipbwi_BOARD_ADMIN_PATH.'applications/core/modules_public/global/login.php');
 	class ipbwi_ips_public_core_global_login extends \public_core_global_login {
 
@@ -44,6 +44,15 @@
 		public function doLoginWithoutCheckingCredentials($memberID, $setCookies=TRUE)
 		{
 			return $this->han_login->loginWithoutCheckingCredentials($memberID, $setCookies); // @ todo: check notices from ip.board
+		}
+		public function doLogout($check_key = true){
+			$this->member->sessionClass()->convertMemberToGuest();
+
+			$privacy = intval( \IPSMember::isLoggedInAnon($this->memberData) );
+			
+			\IPSMember::save( $this->memberData['member_id'], array( 'core' => array( 'login_anonymous' => "{$privacy}&0", 'last_activity' => IPS_UNIX_TIME_NOW ) ) );
+			
+			return true;
 		}
 	}
 
