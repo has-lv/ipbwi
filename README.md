@@ -1,7 +1,7 @@
 IPBWI
 =========
 
-[IPBWI] [1] integration for Laravel 4. Powered by [HAS.LV] [2].
+[IPBWI] [1] integration for Laravel 5.x. Powered by [HAS.LV] [2].
 
 Installation
 ----
@@ -9,8 +9,10 @@ Installation
 Add package to `composer.json`
 
 	"require": {
-		"haslv/ipbwi": "1.0.*"
+		"haslv/ipbwi": "1.1.*"
 	}
+
+For Laravel 4.x use version 1.0.3 which uses IPBWI 3.6.6
 
 Update composer:
 
@@ -33,7 +35,7 @@ Add facade to app/config/app.php
 Publish config file:
 
 ```sh
-php artisan config:publish haslv/ipbwi
+php artisan vendor:publish
 ```
 
 Usage
